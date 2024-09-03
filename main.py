@@ -16,5 +16,5 @@ if __name__ == "__main__":
     scraper.download_invoice()
     scraper.handle_protocol_modal()
 
-    time.sleep(25)
-    #scraper.quit()
+    time.sleep(3)
+    scraper.quit()

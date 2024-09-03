@@ -1,40 +1,37 @@
 import os
 import time
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 from pyvirtualdisplay import Display
 
-
 class EquatorialScraper:
     def __init__(self):
         self.display = None
-        self.download_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "files")
+        self.download_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', "files")
         self.url_base = "https://goias.equatorialenergia.com.br/LoginGO.aspx"
         self.driver = None
         self.setup_driver()
 
     def setup_driver(self):
-        #self.display = Display(visible=0, size=(1024, 768))
-        #self.display.start()
+        # self.display = Display(visible=0, size=(1024, 768))
+        # self.display.start()
 
-        chrome_options = Options()
-        chrome_options.add_argument('--no-sandbox')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_experimental_option("prefs", {
-            "download.default_directory": self.download_folder,
-            'directory_upgrade': True,
-            'download.directory_upgrade': True,
-            'safebrowsing.enabled': True
-        })
+        firefox_options = FirefoxOptions()
+        firefox_options.add_argument('--no-sandbox')
+        firefox_options.add_argument('--disable-gpu')
+        firefox_options.add_argument('--disable-dev-shm-usage')
+        firefox_options.set_preference("browser.download.folderList", 2)
+        firefox_options.set_preference("browser.download.dir", self.download_folder)
+        firefox_options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/pdf")
+        firefox_options.set_preference("pdfjs.disabled", True)  # Desativa o visualizador de PDF interno do Firefox
 
-        driver_path = "/opt/chromedriver/chromedriver"
-        service = Service(driver_path)
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver_path = "/opt/geckodriver/geckodriver"  # Substitua pelo caminho correto do seu geckodriver
+        service = FirefoxService(executable_path=driver_path)
+        self.driver = webdriver.Firefox(service=service, options=firefox_options)
 
     def wait_for_element(self, by, value, timeout=10):
         end_time = time.time() + timeout
@@ -72,6 +69,7 @@ class EquatorialScraper:
 
     def access_second_invoice(self):
         try:
+            time.sleep(5)
             contas_menu = self.wait_for_element(By.XPATH, "//label[normalize-space(text())='Contas']")
             contas_menu.click()
             time.sleep(1)  # Espera o menu expandir
