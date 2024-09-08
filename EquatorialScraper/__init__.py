@@ -73,7 +73,7 @@ class EquatorialScraper:
             login_button = self.wait_for_element(By.XPATH, "//button[@onclick='ValidarCamposAreaLogada()']")
             login_button.click()
         except WebDriverException as e:
-            raise WebDriverException(f"Falha ao realizar login: {e}")
+            raise WebDriverException(f"Falha ao realizar login: {e.msg}")
 
     def close_modal(self, modal_selector):
         try:
@@ -82,7 +82,7 @@ class EquatorialScraper:
             close_button = modal.find_element(By.CSS_SELECTOR, ".close")
             close_button.click()
         except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar fechar o modal {modal_selector}: {e}")
+            raise WebDriverException(f"Erro ao tentar fechar o modal {modal_selector}: {e.msg}")
 
     def access_second_invoice(self):
         try:
@@ -94,7 +94,7 @@ class EquatorialScraper:
             segunda_via_link = self.wait_for_element(By.ID, "LinkSegundaVia")
             segunda_via_link.click()
         except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar acessar a Segunda Via de Fatura: {e}")
+            raise WebDriverException(f"Erro ao tentar acessar a Segunda Via de Fatura: {e.msg}")
 
     def select_option(self, select_id, value, option_type='value'):
         try:
@@ -106,7 +106,7 @@ class EquatorialScraper:
             elif option_type == 'text':
                 select.select_by_visible_text(value)
         except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar selecionar a opção '{value}' em {select_id}: {e}")
+            raise WebDriverException(f"Erro ao tentar selecionar a opção '{value}' em {select_id}: {e.msg}")
 
     def click_button(self, button_id):
         try:
@@ -114,7 +114,7 @@ class EquatorialScraper:
             button = self.wait_for_element(By.ID, button_id)
             button.click()
         except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar clicar no botão '{button_id}': {e}")
+            raise WebDriverException(f"Erro ao tentar clicar no botão '{button_id}': {e.msg}")
 
     def download_invoice(self):
         try:
@@ -138,7 +138,7 @@ class EquatorialScraper:
 
             self.protocol_number = protocol_text.split(': ')[-1].replace(".", "")
         except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar lidar com o modal de protocolo: {e}")
+            raise WebDriverException(f"Erro ao tentar lidar com o modal de protocolo: {e.msg}")
 
     def wait_for_download(self, timeout=30):
         download_folder = self.download_folder
@@ -188,4 +188,4 @@ class EquatorialScraper:
             return json.dumps({"status": 1, "protocol": self.protocol_number, "pathEnergia": self.downloaded_file_name, "traceback": None})
 
         except WebDriverException as e:
-            return json.dumps({"status": 2, "protocol": None, "pathEnergia": None, "traceback": str(e)})
+            return json.dumps({"status": 2, "protocol": None, "pathEnergia": None, "traceback": str(e.msg)})
