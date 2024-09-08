@@ -18,7 +18,7 @@ class EquatorialScraper:
         self.downloaded_file_name = None
         self.protocol_number = None
         self.display = None
-        self.download_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', "files")
+        self.download_folder = "/app/files" #os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', "files")
         self.url_base = "https://goias.equatorialenergia.com.br/LoginGO.aspx"
         self.driver = None
         self.download_exception = None
@@ -182,7 +182,7 @@ class EquatorialScraper:
         if self.driver:
             self.driver.quit()
 
-    def process(self, unidade_consumidora, cnpj):
+    def process(self, id, unidade_consumidora, cnpj):
         try:
             self.login(unidade_consumidora, cnpj)
             self.close_modal("#popup_promocao")
@@ -196,18 +196,21 @@ class EquatorialScraper:
 
             return json.dumps(
                 {
+                    "id": id,
                     "status": 1,
                     "protocol": self.protocol_number,
                     "pathEnergia": self.downloaded_file_name,
-                    "traceback": "Success."
+                    "traceback": None
                 }
             )
 
         except Exception as e:
             return json.dumps(
-                {"status": 2,
-                 "protocol": None,
-                 "pathEnergia": None,
-                 "traceback": str(e.msg)
+                {
+                    "id": id,
+                    "status": 2,
+                    "protocol": None,
+                    "pathEnergia": None,
+                    "traceback": str(e)
                  }
             )
