@@ -18,9 +18,10 @@ class EquatorialScraper:
         self.downloaded_file_name = None
         self.protocol_number = None
         self.display = None
-        self.download_folder = "/app/files"
+        self.download_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', "files")
         self.url_base = "https://goias.equatorialenergia.com.br/LoginGO.aspx"
         self.driver = None
+        self.download_exception = None
         self.setup_driver()
 
     def setup_driver(self):
@@ -145,29 +146,37 @@ class EquatorialScraper:
         start_time = time.time()
         downloaded_file_name = None
 
-        while True:
-            files = os.listdir(download_folder)
+        try:
+            while True:
+                files = os.listdir(download_folder)
 
-            part_files = [file for file in files if file.endswith(".part")]
+                part_files = [file for file in files if file.endswith(".part")]
 
-            if part_files:
-                part_file = part_files[0]
-                downloaded_file_name = part_file.split(".")[0]
-            else:
-                if downloaded_file_name:
-                    pdf_files = [file for file in files if
-                                 file.endswith(".pdf") and file.startswith(downloaded_file_name)]
-                    if pdf_files:
-                        self.downloaded_file_name = pdf_files[0]
-                        break
+                if part_files:
+                    part_file = part_files[0]
+                    downloaded_file_name = part_file.split(".")[0]
+                else:
+                    if downloaded_file_name:
+                        pdf_files = [file for file in files if
+                                     file.endswith(".pdf") and file.startswith(downloaded_file_name)]
+                        if pdf_files:
+                            self.downloaded_file_name = pdf_files[0]
+                            break
 
-            elapsed_time = time.time() - start_time
-            if elapsed_time > timeout:
-                raise TimeoutException("O download não foi concluído dentro do tempo limite.")
-
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    raise TimeoutException("O download não foi concluído dentro do tempo limite.")
+        except TimeoutException as e:
+            self.download_exception = e  # Armazena a exceção
 
     def wait_for_finish_download(self):
-        if self.download_thread: self.download_thread.join()
+        try:
+            if self.download_thread:
+                self.download_thread.join()
+                if self.download_exception:
+                    raise self.download_exception
+        except TimeoutException:
+            raise
 
     def quit(self):
         if self.driver:
@@ -185,7 +194,20 @@ class EquatorialScraper:
             self.handle_protocol_modal()
             self.wait_for_finish_download()
 
-            return json.dumps({"status": 1, "protocol": self.protocol_number, "pathEnergia": self.downloaded_file_name, "traceback": None})
+            return json.dumps(
+                {
+                    "status": 1,
+                    "protocol": self.protocol_number,
+                    "pathEnergia": self.downloaded_file_name,
+                    "traceback": "Success."
+                }
+            )
 
-        except WebDriverException as e:
-            return json.dumps({"status": 2, "protocol": None, "pathEnergia": None, "traceback": str(e.msg)})
+        except Exception as e:
+            return json.dumps(
+                {"status": 2,
+                 "protocol": None,
+                 "pathEnergia": None,
+                 "traceback": str(e.msg)
+                 }
+            )
