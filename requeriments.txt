@@ -1,5 +1,6 @@
 attrs==24.2.0
 certifi==2024.8.30
+confluent-kafka==2.5.3
 exceptiongroup==1.2.2
 h11==0.14.0
 idna==3.8
