@@ -3,6 +3,8 @@ from EquatorialScraper import EquatorialScraper
 import json
 import logging
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s: %(message)s')
+
 class KafkaClient:
     def __init__(self, consumer_config, producer_config, input_topic, output_topic):
         self.consumer = Consumer(consumer_config)
@@ -19,12 +21,9 @@ class KafkaClient:
                 continue
             if msg.error():
                 raise KafkaException(msg.error())
-
-            message = msg.value().decode('utf-8')
-
-            logging.log(logging.DEBUG, f"Received message: {message}")
             try:
-                data = json.loads(message)
+                data = json.loads(msg.value().decode('utf-8'))
+                logging.info(f"Received message: {data}")
                 unidade_consumidora = data.get('unidade_consumidora')
                 doc = data.get('doc')
                 id = data.get('id')
@@ -32,13 +31,12 @@ class KafkaClient:
                 self.produce_result(self.scraper.process(id, unidade_consumidora, doc))
 
             except KafkaException as e:
-                logging.log(logging.ERROR, f"Error consuming message: {e}")
+                logging.error(f"Error consuming message: {e}")
 
     def produce_result(self, result):
         try:
             self.producer.produce(self.output_topic, result)
             self.producer.flush()
-            logging.log(logging.DEBUG,f"Produced result: {result}")
+            logging.info(f"Produced result: {result}")
         except KafkaException as e:
-            logging.log(logging.ERROR,f"Error producing result: {e}")
-
+            logging.error(f"Error producing result: {e}")
