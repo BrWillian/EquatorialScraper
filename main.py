@@ -1,20 +1,25 @@
-from EquatorialScraper import EquatorialScraper
-import time
+import os
+from KafkaClient.kafka_client import KafkaClient
+
+
+def main():
+    consumer_config = {
+        'bootstrap.servers': os.getenv('KAFKA_CONSUMER_BOOTSTRAP_SERVERS', 'kafka:9092'),
+        'group.id': os.getenv('KAFKA_CONSUMER_GROUP_ID', 'equatorial-scraper'),
+        'auto.offset.reset': os.getenv('KAFKA_AUTO_OFFSET_RESET', 'earliest')
+    }
+
+    producer_config = {
+        'bootstrap.servers': os.getenv('KAFKA_PRODUCER_BOOTSTRAP_SERVERS', 'kafka:9092')
+    }
+
+    input_topic = os.getenv('KAFKA_CONSUMER_TOPIC', 'input_topic')
+    output_topic = os.getenv('KAFKA_PRODUCER_TOPIC', 'output_topic')
+
+    kafka_client = KafkaClient(consumer_config, producer_config, input_topic, output_topic)
+
+    kafka_client.consume_messages()
+
 
 if __name__ == "__main__":
-    scraper = EquatorialScraper()
-
-    unidade_consumidora = "10031716405"
-    cnpj = "27.265.098/0001-65"
-
-    scraper.login(unidade_consumidora, cnpj)
-    scraper.close_modal("#popup_promocao")
-    scraper.access_second_invoice()
-    scraper.select_option("CONTENT_cbTipoEmissao", "completa")
-    scraper.select_option("CONTENT_cbMotivo", "ESV05")
-    scraper.click_button("CONTENT_btEnviar")
-    scraper.download_invoice()
-    scraper.handle_protocol_modal()
-
-    time.sleep(25)
-    #scraper.quit()
+    main()
