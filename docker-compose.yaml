@@ -54,7 +54,7 @@ services:
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
 
   equatorial-scraper:
-    image: sev3ndie/equatorial-scraper:2.0.0
+    image: sev3ndie/equatorial-scraper:3.0.0
     container_name: equatorial-scraper
     depends_on:
       - kafka
