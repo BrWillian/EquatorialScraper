@@ -98,16 +98,6 @@ class EquatorialScraper:
         except WebDriverException as e:
             raise WebDriverException(f"Falha ao realizar login: {e.msg}")
 
-    def close_modal(self, modal_selector):
-        """Closes modal windows."""
-        try:
-            time.sleep(2)
-            modal = self.wait_for_element(By.CSS_SELECTOR, modal_selector)
-            close_button = modal.find_element(By.CSS_SELECTOR, ".close")
-            close_button.click()
-        except WebDriverException as e:
-            raise WebDriverException(f"Erro ao tentar fechar o modal {modal_selector}: {e.msg}")
-
     def access_menu_invoices(self, select_id):
         """Accesses the menu for invoices."""
         try:
@@ -157,16 +147,19 @@ class EquatorialScraper:
         except WebDriverException as e:
             print(f"Erro ao tentar fazer o download da fatura: {e.msg}")
 
-    def handle_protocol_modal(self, select_id, protocol_id):
-        """Handles the modal that shows protocol information."""
+    def handle_modal(self, select_id, protocol_id):
+        """Handles the modal."""
         try:
+            modal = self.wait_for_element(By.ID, select_id)
+
+            if protocol_id is not None:
+                protocol_text = modal.find_element(By.ID, protocol_id).text
+                self.protocol_number.append(protocol_text.split(': ')[-1].replace(".", ""))
+
             time.sleep(2)
-            protocol_modal = self.wait_for_element(By.ID, select_id)
-            protocol_text = protocol_modal.find_element(By.ID, protocol_id).text
-            ok_button = protocol_modal.find_element(By.CLASS_NAME, "btn")
+            ok_button = modal.find_element(By.CLASS_NAME, "btn")
             ok_button.click()
 
-            self.protocol_number.append(protocol_text.split(': ')[-1].replace(".", ""))
         except WebDriverException as e:
             raise WebDriverException(f"Erro ao tentar lidar com o modal de protocolo: {e.msg}")
 
@@ -240,7 +233,7 @@ class EquatorialScraper:
                 self.switch_to_new_window()
                 self.download_thread = threading.Thread(target=self.wait_for_download)
                 self.download_thread.start()
-                self.handle_protocol_modal("mostrarEspelhoFaturaModalProtocolo", "CONTENT_lblModalBody_protocolo")
+                self.handle_modal("mostrarEspelhoFaturaModalProtocolo", "CONTENT_lblModalBody_protocolo")
                 self.wait_for_finish_download()
 
                 self.rename_downloaded_file(mes_ano.replace("/", "_"))
@@ -273,17 +266,17 @@ class EquatorialScraper:
 
             # Processando o scraper
             self.login(unidade_consumidora, cnpj)
-            self.close_modal("#popup_promocao")
+            self.handle_modal("popup_promocao", None)
             self.access_menu_invoices("LinkSegundaVia")
             self.select_option("CONTENT_cbTipoEmissao", "completa")
             self.select_option("CONTENT_cbMotivo", "ESV05")
             self.click_button("CONTENT_btEnviar")
             self.download_invoice()
-            self.handle_protocol_modal("FaturaCompletaModalProtocolo", "CONTENT_lblModalBody_protocolo")
+            self.handle_modal("FaturaCompletaModalProtocolo", "CONTENT_lblModalBody_protocolo")
             self.wait_for_finish_download()
             self.access_menu_invoices("LinkhistoricoFaturas")
             self.click_button("CONTENT_btEnviar")
-            self.handle_protocol_modal("historicoFaturaModal", "CONTENT_lblModalBody")
+            self.handle_modal("historicoFaturaModal", "CONTENT_lblModalBody")
             self.download_invoice_history()
 
         except Exception as e:
