@@ -16,27 +16,50 @@ class KafkaClient:
     def consume_messages(self):
         self.consumer.subscribe([self.input_topic])
         while True:
-            msg = self.consumer.poll(timeout=1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                raise KafkaException(msg.error())
             try:
-                data = json.loads(msg.value().decode('utf-8'))
-                logging.info(f"Received message: {data}")
-                unidade_consumidora = data.get('unidade_consumidora')
-                doc = data.get('doc')
-                id = data.get('id')
+                msg = self.consumer.poll(timeout=1.0)
+                if msg is None:
+                    continue
 
-                self.produce_result(self.scraper.process(id, unidade_consumidora, doc))
+                if msg.error():
+                    raise KafkaException(msg.error())
+
+                self.handle_message(msg)
 
             except KafkaException as e:
-                logging.error(f"Error consuming message: {e}")
+                self.log_error(f"Error consuming message: {e}")
 
-    def produce_result(self, result):
+    def handle_message(self, msg):
         try:
-            self.producer.produce(self.output_topic, result)
+            data = json.loads(msg.value().decode('utf-8'))
+            self.log_info(f"Received message: {data}")
+
+            self.scraper.process(data.get('unidade_consumidora'), data.get('doc'))
+
+            result = self.create_result(data)
+            self.produce_result(result)
+
+        except Exception as e:
+            self.log_error(f"Error processing message: {e}")
+
+    def create_result(self, data: dict) -> dict:
+        result = self.scraper.__dict__()
+        result['id'] = data.get('id')
+        return result
+
+    def produce_result(self, result: dict):
+        try:
+            self.producer.produce(self.output_topic, json.dumps(result))
             self.producer.flush()
-            logging.info(f"Produced result: {result}")
+            self.log_info(f"Produced result: {result}")
+
         except KafkaException as e:
-            logging.error(f"Error producing result: {e}")
+            self.log_error(f"Error producing result: {e}")
+
+    @staticmethod
+    def log_info(message: str):
+        logging.info(message)
+
+    @staticmethod
+    def log_error(message: str):
+        logging.error(message)
