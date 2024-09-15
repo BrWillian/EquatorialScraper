@@ -1,5 +1,5 @@
 import os
-from KafkaClient.kafka_client import KafkaClient
+from KafkaClient import KafkaClient
 
 
 def main():
