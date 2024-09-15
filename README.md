@@ -1,4 +1,4 @@
-# EquatorialScraper
+# :scroll: EquatorialScraper
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
 ![Selenium](https://img.shields.io/badge/Selenium-4.1.0-green?logo=selenium)
@@ -9,17 +9,10 @@ O `TransfereGovScraper` é uma ferramenta em Python para automatizar o scraping 
 
 Certifique-se de ter os seguintes requisitos instalados:
 
-- Python 3.x ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
-- Chrome WebDriver
-- Xvfb (instalável via apt)
+- Docker
+- Docker Compose
 
-```bash
-sudo apt install xvfb
-```
-
-Certifique-se de ter o Chrome WebDriver baixado e configurado. Você pode ajustar o caminho para o driver no código conforme necessário.
-
-## Como Usar
+## :clipboard: Como Usar
 
 1. **Clone do repositório**
     - Faça o download do repositorio
@@ -31,35 +24,26 @@ Certifique-se de ter o Chrome WebDriver baixado e configurado. Você pode ajusta
    - Certifique-se de ter o Chrome WebDriver instalado e configurado.
    - Instale as dependências necessárias:
      ```bash
-     pip install -r requirements.txt
+     docker-compose up --build --recreate-force
      ```
 
 3. **Executar o Script**
-   - Navegue até o diretório clonado:
-     ```bash
-     cd EquatorialScraper
-     ```
-   - Execute o script Python:
-     ```bash
-     python main.py
-     ```
-   - Siga as instruções na linha de comando para inserir o número do convênio desejado.
+   - Navegue o kafka-ui:
+   - E produza as mensagens no formato:
+       ```json
+       {"id": 1,"unidade_consumidora": "00000000000","doc": "00.000.000/0001-00"}
+       ```
+   - O resultado gerado será no topico configurado no seguinte formato para erro:
+       ```json
+       {"id": 1, "status": 2,"downloaded_files": [], "error_message": "Message error!"}
+       ```
+   - Ou para sucesso:
+       ```json
+       {"id": 1, "status": 1,"downloaded_files": ["file.pdf", "file_1_2024.pdf"], "error_message": null}
+       ```
+   
+## :rocket: Observações
 
-4. **Resultados**
-   - O script irá iniciar o WebDriver do Chrome automaticamente.
-   - Ele irá acessar a página correspondente ao convênio fornecido e extrair os links de download.
-   - Os arquivos serão baixados automaticamente para a pasta `files` dentro do diretório do script.
-   - Os arquivos serão renomeados e organizados por convênio em subpastas dentro da pasta `files`.
-
-## Estrutura do Projeto
-
-- `main.py`: O script principal que contém invoca `EquatorialScraper` para realizar o scraping e download.
-- `files/`: Pasta padrão onde os arquivos baixados serão armazenados.
-- `README.md`: Este arquivo, fornecendo informações sobre o projeto e como usá-lo.
-
-## Observações
-
-- Certifique-se de ajustar o caminho do Chrome WebDriver (`chrome_driver_path`) conforme necessário no código.
+- Certifique-se de ajustar o caminho do volume presente no docker-compose.yaml ```$HOME/equatorial-scraper/:/app/files```
 - O script foi projetado para trabalhar com links específicos gerados dinamicamente por um site específico. Adapte conforme necessário para outras finalidades.
-
 ---
